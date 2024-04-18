@@ -31,7 +31,6 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'apps.check',
-
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -116,8 +115,6 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = Path(BASE_DIR.resolve().parent, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# AUTH_USER_MODEL = 'user.UserModel'
 
 CELERY_BROKER_URL = os.getenv('REDIS_URL')
 CELERY_RESULT_BACKEND = os.getenv('REDIS_URL')

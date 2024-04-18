@@ -1,8 +1,8 @@
 import os
 from json import dumps
 
-from kafka import KafkaProducer
 from dotenv import load_dotenv
+from kafka import KafkaProducer
 
 load_dotenv()
 
@@ -15,6 +15,3 @@ producer = KafkaProducer(bootstrap_servers=bootstrap_servers, value_serializer=l
 def send_messages(data):
     """Отправка сообщения в сервис приема чеков"""
     producer.send(topic_name, value=data)
-
-
-

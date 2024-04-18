@@ -1,15 +1,14 @@
+from rest_framework import status, views
 from rest_framework.response import Response
-from rest_framework import status
 
 from apps.check.models import ChecksModel
 from apps.check.serializers import ReceivingCheckSerializer
-from rest_framework import views
-
 from produser.produser import send_messages
 
 
 class ReceivingCheckView(views.APIView):
     """View получения чеков"""
+
     serializer_class = ReceivingCheckSerializer
 
     def post(self, request):

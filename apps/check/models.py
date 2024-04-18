@@ -10,5 +10,3 @@ class ChecksModel(models.Model):
     json_data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
