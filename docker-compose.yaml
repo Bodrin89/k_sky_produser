@@ -1,0 +1,96 @@
+
+services:
+  db_producer:
+    container_name: k_sky_db
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - k_sky_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      timeout: 3s
+      retries: 10
+      interval: 3s
+    networks:
+      some_network:
+        aliases:
+          - producer_container
+
+  api:
+    container_name: k_sky_api
+    build: .
+    depends_on:
+      db_producer:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - 8088:8088
+    volumes:
+      - ./:/code
+      - ./static:/static
+    command: [python, manage.py, runserver, 0.0.0.0:8088]
+    entrypoint: [bash, entrypoint.sh]
+    networks:
+      some_network:
+        aliases:
+          - producer_container
+
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      some_network:
+        aliases:
+          - producer_container
+
+  kafka-1:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      zookeeper-1:
+        condition: service_started
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://kafka-1:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: nc -z kafka-1 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - Data1:/var/lib/kafka/data
+    networks:
+      some_network:
+        aliases:
+          - producer_container
+
+networks:
+    some_network:
+        name: 'our_network'
+
+volumes :
+  k_sky_pg_data:
+  Data1:
